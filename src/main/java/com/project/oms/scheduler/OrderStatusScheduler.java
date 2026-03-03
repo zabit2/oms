@@ -17,7 +17,7 @@ public class OrderStatusScheduler {
         this.orderService = orderService;
     }
 
-    @Scheduled(fixedRate = 5 * 60 * 1000)
+    @Scheduled(fixedRate = 15 * 1000)
     public void promotePendingOrders() {
         int updatedCount = orderService.autoPromotePendingToProcessing();
         if (updatedCount > 0) {

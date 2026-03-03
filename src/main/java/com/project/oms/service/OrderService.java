@@ -4,6 +4,7 @@ import com.project.oms.domain.Order;
 import com.project.oms.domain.OrderItem;
 import com.project.oms.domain.OrderStatus;
 import com.project.oms.exception.InvalidOrderStatusException;
+import com.project.oms.exception.InvalidPaymentValueException;
 import com.project.oms.exception.OrderNotFoundException;
 import com.project.oms.repository.OrderRepository;
 import com.project.oms.web.dto.CreateOrderRequest;
@@ -83,6 +84,21 @@ public class OrderService {
         return orderRepository.save(order);
     }
 
+    public Order updatePayment(Long id, BigDecimal paymentValue) {
+        Order order = getOrder(id);
+        if (order.getStatus() == OrderStatus.CANCELLED || order.getStatus() == OrderStatus.DELIVERED) {
+            throw new InvalidOrderStatusException(
+                    "Cannot pay for an order that is cancelled or delivered");
+        }
+
+        if (paymentValue.intValue() < 0) {
+            throw new InvalidPaymentValueException("Invalid payment value");
+        }
+        BigDecimal updatedPaymentValue =  order.getTotalPayment().add(paymentValue);
+        order.setTotalPayment(updatedPaymentValue);
+        return orderRepository.save(order);
+    }
+
     public Order cancelOrder(Long id) {
         Order order = getOrder(id);
         if (order.getStatus() != OrderStatus.PENDING) {
@@ -96,7 +112,9 @@ public class OrderService {
     public int autoPromotePendingToProcessing() {
         List<Order> pendingOrders = orderRepository.findByStatus(OrderStatus.PENDING);
         for (Order order : pendingOrders) {
-            order.setStatus(OrderStatus.PROCESSING);
+            if (order.getTotalAmount().equals(order.getTotalPayment())) {
+                order.setStatus(OrderStatus.PROCESSING);
+            }
         }
         orderRepository.saveAll(pendingOrders);
         return pendingOrders.size();

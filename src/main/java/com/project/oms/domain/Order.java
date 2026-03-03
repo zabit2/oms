@@ -45,6 +45,9 @@ public class Order {
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal totalAmount = BigDecimal.ZERO;
 
+    @Column(nullable = false, precision = 19, scale = 2)
+    private BigDecimal totalPayment = BigDecimal.ZERO;
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<OrderItem> items = new ArrayList<>();
 
@@ -80,8 +83,16 @@ public class Order {
         return totalAmount;
     }
 
+    public BigDecimal getTotalPayment() {
+        return totalPayment;
+    }
+
     public void setTotalAmount(BigDecimal totalAmount) {
         this.totalAmount = totalAmount;
+    }
+
+    public void setTotalPayment(BigDecimal totalPayment) {
+        this.totalPayment = totalPayment;
     }
 
     public List<OrderItem> getItems() {

@@ -5,6 +5,7 @@ import com.project.oms.domain.OrderStatus;
 import com.project.oms.service.OrderService;
 import com.project.oms.web.dto.CreateOrderRequest;
 import com.project.oms.web.dto.OrderResponse;
+import com.project.oms.web.dto.UpdateOrderPaymentRequest;
 import com.project.oms.web.dto.UpdateOrderStatusRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -53,6 +54,15 @@ public class OrderController {
             @Valid @RequestBody UpdateOrderStatusRequest request
     ) {
         Order updated = orderService.updateStatus(id, request.status());
+        return ResponseEntity.ok(OrderMapper.toResponse(updated));
+    }
+
+    @PatchMapping("/{id}/payment")
+    public ResponseEntity<OrderResponse> updatePayment(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateOrderPaymentRequest request
+    ) {
+        Order updated = orderService.updatePayment(id, request.payment());
         return ResponseEntity.ok(OrderMapper.toResponse(updated));
     }
 
