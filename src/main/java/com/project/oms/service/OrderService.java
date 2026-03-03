@@ -3,10 +3,12 @@ package com.project.oms.service;
 import com.project.oms.domain.Order;
 import com.project.oms.domain.OrderItem;
 import com.project.oms.domain.OrderStatus;
+import com.project.oms.domain.Payment;
 import com.project.oms.exception.InvalidOrderStatusException;
 import com.project.oms.exception.InvalidPaymentValueException;
 import com.project.oms.exception.OrderNotFoundException;
 import com.project.oms.repository.OrderRepository;
+import com.project.oms.repository.PaymentRepository;
 import com.project.oms.web.dto.CreateOrderRequest;
 import com.project.oms.web.dto.OrderItemRequest;
 import org.springframework.stereotype.Service;
@@ -21,9 +23,12 @@ import java.util.Optional;
 public class OrderService {
 
     private final OrderRepository orderRepository;
+    private final PaymentRepository paymentRepository;
 
-    public OrderService(OrderRepository orderRepository) {
+    public OrderService(OrderRepository orderRepository, PaymentRepository paymentRepository) {
+
         this.orderRepository = orderRepository;
+        this.paymentRepository = paymentRepository;
     }
 
     public Order createOrder(CreateOrderRequest request) {
@@ -112,7 +117,12 @@ public class OrderService {
     public int autoPromotePendingToProcessing() {
         List<Order> pendingOrders = orderRepository.findByStatus(OrderStatus.PENDING);
         for (Order order : pendingOrders) {
-            if (order.getTotalAmount().equals(order.getTotalPayment())) {
+            List<Payment> paymentsList = paymentRepository.findByOrderId(order.getId());
+            BigDecimal finalPaymentValue = new BigDecimal(0);
+            for (Payment payment : paymentsList) {
+                finalPaymentValue = finalPaymentValue.add(payment.getPaymentValue());
+            }
+            if (order.getTotalAmount().equals(finalPaymentValue)) {
                 order.setStatus(OrderStatus.PROCESSING);
             }
         }
